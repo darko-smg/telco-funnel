@@ -2,383 +2,1158 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Lo-Fi Telecom Prototype</title>
+<title>Lo-Fi Telecom Prototype (Mobile + Household)</title>
 <style>
-  body { margin: 0; font-family: Arial, sans-serif; }
-  header { background: #f4f4f4; padding: 15px 30px; position: relative; }
-  nav { display: flex; gap: 40px; font-weight: bold; }
-  .nav-item { position: relative; cursor: pointer; }
+body { margin: 0; font-family: Arial, sans-serif; }
+header { background: #f4f4f4; padding: 15px 30px; position: relative; }
+nav { display: flex; gap: 40px; font-weight: bold; align-items: center; }
+.nav-item { position: relative; cursor: pointer; }
 
-  /* Hover dropdown */
-  .dropdown {
-    display: none;
-    position: absolute;
-    top: 28px;
-    left: 0;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 18px;
-    width: 620px;
-    z-index: 999;
-  }
-  .dropdown::before { content:""; position:absolute; top:-12px; left:0; right:0; height:12px; }
-  .nav-item:hover .dropdown { display: block; }
+/* Hover dropdown: keep open when hovering anywhere inside the dropped pane */
+.dropdown {
+display: none;
+position: absolute;
+top: 28px;
+left: 0;
+background: white;
+border: 1px solid #ccc;
+padding: 18px;
+width: 760px;
+z-index: 999;
+}
+.dropdown::before { content:""; position:absolute; top:-14px; left:0; right:0; height:14px; } /* safe area */
+.nav-item:hover .dropdown { display: block; }
+.dropdown:hover { display: block; } /* ensure it remains open over whole pane */
 
-  .dropdown-columns { display: flex; justify-content: space-between; gap: 20px; }
-  .dropdown-column { display: flex; flex-direction: column; gap: 10px; min-width: 170px; }
+.dropdown-columns { display: flex; justify-content: space-between; gap: 20px; }
+.dropdown-column { display: flex; flex-direction: column; gap: 10px; min-width: 210px; }
+.dropdown-btn {
+font: inherit;
+font-weight: normal;
+text-align: left;
+background: #fafafa;
+border: 1px solid #ddd;
+padding: 10px 12px;
+cursor: pointer;
+}
+.dropdown-btn:hover { background: #f0f0f0; }
 
-  .dropdown-btn {
-    font: inherit;
-    font-weight: normal;
-    text-align: left;
-    background: #fafafa;
-    border: 1px solid #ddd;
-    padding: 10px 12px;
-    cursor: pointer;
-  }
-  .dropdown-btn:hover { background: #f0f0f0; }
+/* Pages */
+.page { display: none; padding: 40px; }
+.active { display: block; }
 
-  /* Pages */
-  .page { display: none; padding: 40px; }
-  .active { display: block; }
+/* Tiles */
+.tiles { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px; }
+.tile {
+border: 1px solid #ccc;
+padding: 14px 14px;
+min-width: 150px;
+text-align: center;
+background: #fafafa;
+cursor: pointer;
+user-select: none;
+}
+.tile:hover { background: #f0f0f0; }
 
-  /* Tiles */
-  .tiles { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px; }
-  .tile {
-    border: 1px solid #ccc;
-    padding: 18px 16px;
-    width: 150px;
-    text-align: center;
-    background: #fafafa;
-    cursor: pointer;
-    user-select: none;
-  }
-  .tile:hover { background: #f0f0f0; }
+.button {
+padding: 12px 24px;
+border: 1px solid black;
+background: white;
+cursor: pointer;
+margin-top: 16px;
+display: inline-block;
+}
 
-  .button {
-    padding: 12px 24px;
-    border: 1px solid black;
-    background: white;
-    cursor: pointer;
-    margin-top: 20px;
-    display: inline-block;
-  }
+/* Layouts */
+.layout-20-60-20 { display: flex; }
+.filters-20 { width: 20%; border-right: 1px solid #ccc; padding: 20px; box-sizing: border-box; }
+.list-60 { width: 60%; padding: 20px; box-sizing: border-box; }
+.ads-20 { width: 20%; border-left: 1px solid #ccc; padding: 20px; box-sizing: border-box; }
 
-  /* Results layout (20 / 60 / 20) */
-  .results-layout { display: flex; }
-  .filters { width: 20%; border-right: 1px solid #ccc; padding: 20px; box-sizing: border-box; }
-  .list { width: 60%; padding: 20px; box-sizing: border-box; }
-  .ads { width: 20%; border-left: 1px solid #ccc; padding: 20px; box-sizing: border-box; }
+.layout-25-50-25 { display: flex; }
+.filters-25 { width: 25%; border-right: 1px solid #ccc; padding: 20px; box-sizing: border-box; }
+.list-50 { width: 50%; padding: 20px; box-sizing: border-box; }
+.ads-25 { width: 25%; border-left: 1px solid #ccc; padding: 20px; box-sizing: border-box; }
 
-  .result-item { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; background: #fafafa; }
-  .ad-slot { border: 1px dashed #999; padding: 30px; margin-bottom: 20px; text-align: center; }
+.result-item { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; background: #fafafa; }
+.ad-slot { border: 1px dashed #999; padding: 30px; margin-bottom: 20px; text-align: center; }
 
-  .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin: 10px 0 18px; }
-  .pill { border:1px solid #ccc; background:#fff; padding:6px 10px; font-size: 12px; }
+/* Applied filter cards */
+.card-row { display:flex; flex-wrap:wrap; gap:8px; margin: 0 0 12px; }
+.fcard {
+display:inline-flex; align-items:center; gap:8px;
+border:1px solid #ccc; background:#fff;
+padding: 6px 10px;
+font-size: 12px;
+}
+.fcard button {
+border: 1px solid #999;
+background: #fff;
+cursor: pointer;
+width: 18px; height: 18px;
+display:inline-flex; align-items:center; justify-content:center;
+font-size: 12px;
+line-height: 12px;
+}
 
-  .muted { color:#666; font-size: 12px; }
+.muted { color:#666; font-size: 12px; }
+.section { border: 1px solid #e5e5e5; padding: 12px; margin: 10px 0 14px; background: #fafafa; }
+.section-title { font-weight: bold; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center; }
+.section-toggle { font-size: 12px; border:1px solid #ccc; background:#fff; cursor:pointer; padding:4px 8px; }
 
-  .filter-section { border: 1px solid #e5e5e5; padding: 12px; margin: 10px 0 16px; background: #fafafa; }
-  .filter-title { font-weight: bold; margin-bottom: 8px; }
+/* Reset + Save */
+.top-actions { display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
+.bell {
+width: 24px; height: 24px;
+display:inline-flex; align-items:center; justify-content:center;
+border: 1px solid #ccc; background:#fff; cursor:pointer;
+font-size: 14px;
+}
+.top-btn {
+padding: 8px 10px;
+border: 1px solid #000;
+background:#fff;
+cursor:pointer;
+font-size: 12px;
+}
+
+/* Modal */
+.modal-backdrop {
+display:none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.25);
+z-index: 2000;
+align-items: center;
+justify-content: center;
+}
+.modal {
+width: 420px;
+background: #fff;
+border: 1px solid #ccc;
+padding: 18px;
+}
+.modal h3 { margin: 0 0 12px; }
+.modal label { display:block; font-size: 12px; color:#333; margin-top: 10px; }
+.modal input {
+width: 100%;
+box-sizing: border-box;
+padding: 8px;
+border: 1px solid #ccc;
+margin-top: 6px;
+}
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top: 14px; }
+.modal-actions button {
+padding: 8px 10px;
+border: 1px solid #000;
+background:#fff;
+cursor:pointer;
+font-size: 12px;
+}
+
+/* Stars */
+.stars { display:flex; gap:6px; margin-top: 6px; }
+.star {
+width: 24px; height: 24px;
+display:inline-flex; align-items:center; justify-content:center;
+border: 1px solid #ccc; background:#fff;
+cursor:pointer;
+user-select:none;
+}
+.star.active { background:#f0f0f0; border-color:#999; }
+
+/* Multi-select dropdown */
+.ms-wrap { position: relative; }
+.ms-btn {
+width: 100%;
+text-align: left;
+padding: 8px;
+border: 1px solid #ccc;
+background: #fff;
+cursor: pointer;
+font-size: 12px;
+}
+.ms-panel {
+display:none;
+position:absolute;
+left:0; right:0;
+top: 36px;
+background:#fff;
+border:1px solid #ccc;
+padding: 10px;
+z-index: 1500;
+}
+.ms-panel.show { display:block; }
+.ms-actions { display:flex; gap:10px; margin-bottom: 10px; }
+.ms-actions button {
+padding: 6px 8px;
+border: 1px solid #000;
+background:#fff;
+cursor:pointer;
+font-size: 11px;
+}
+.ms-item { display:block; margin: 6px 0; font-size: 12px; }
+
+/* Speed pills */
+.speed-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.speed-pill {
+border: 1px solid #ccc;
+background: #fff;
+padding: 6px 8px;
+cursor: pointer;
+font-size: 12px;
+user-select: none;
+}
+.speed-pill.active { background:#f0f0f0; border-color:#999; }
+
+/* Product card for home results */
+.card-title { font-weight: bold; }
+.card-meta { font-size: 12px; color:#555; margin-top: 4px; }
+.price-row { margin-top: 10px; font-size: 13px; }
+.price-old { text-decoration: line-through; color:#777; margin-right: 8px; }
+.price-new { font-weight: bold; }
+
+/* Results count */
+.results-count { margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; color:#333; }
 </style>
 </head>
 <body>
 
 <header>
-  <nav>
-    <div class="nav-item" onclick="showPage('comparisonA')">Comparison A</div>
-    <div class="nav-item" onclick="showPage('comparisonB')">Comparison B</div>
+<nav>
+<div class="nav-item" onclick="showPage('comparisonA')">Comparison A</div>
+<div class="nav-item" onclick="showPage('comparisonB')">Comparison B</div>
 
-    <div class="nav-item" aria-haspopup="true">
-      Telecom
-      <div class="dropdown" onclick="event.stopPropagation()">
-        <div class="dropdown-columns">
-          <div class="dropdown-column">
-            <button class="dropdown-btn" onclick="goTo('mobilePlans', event)">Mobile Plans</button>
-            <button class="dropdown-btn" onclick="goTo('calculator', event)">Calculator</button>
-          </div>
-          <div class="dropdown-column">
-            <button class="dropdown-btn" onclick="goTo('homeInternet', event)">Home Internet</button>
-            <button class="dropdown-btn" onclick="goTo('television', event)">Television</button>
-            <button class="dropdown-btn" onclick="goTo('landline', event)">Landline</button>
-          </div>
-          <div class="dropdown-column">
-            <button class="dropdown-btn" onclick="goTo('articles', event)">Articles</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+<div class="nav-item" aria-haspopup="true">
+Telecom
+<div class="dropdown" onclick="event.stopPropagation()">
+<div class="dropdown-columns">
+<div class="dropdown-column">
+<button class="dropdown-btn" onclick="goTo('mobileLanding', event)">MOBILE PLANS</button>
+<button class="dropdown-btn" onclick="goTo('calculator', event)">Calculator</button>
+</div>
+<div class="dropdown-column">
+<button class="dropdown-btn" onclick="goTo('homeLanding', event)">HOUSEHOLD PLANS</button>
+<button class="dropdown-btn" onclick="goTo('homeLanding', event)">Internet</button>
+<button class="dropdown-btn" onclick="goTo('homeLanding', event)">Television</button>
+<button class="dropdown-btn" onclick="goTo('homeLanding', event)">Landline</button>
+</div>
+<div class="dropdown-column">
+<button class="dropdown-btn" onclick="goTo('articles', event)">Articles</button>
+</div>
+</div>
+</div>
+</div>
+</nav>
 </header>
 
 <!-- Pages -->
 <div id="comparisonA" class="page active">
-  <h1>Comparison A</h1>
-  <p>Placeholder page.</p>
+<h1>Comparison A</h1>
+<p>Placeholder page.</p>
 </div>
 
 <div id="comparisonB" class="page">
-  <h1>Comparison B</h1>
-  <p>Placeholder page.</p>
+<h1>Comparison B</h1>
+<p>Placeholder page.</p>
 </div>
 
-<div id="mobilePlans" class="page">
-  <h1>Mobile Plans Comparison</h1>
-  <p>
-    Compare mobile plans across Switzerland. Find the best unlimited,
-    prepaid, 5G and youth offers in seconds.
-  </p>
+<!-- MOBILE LANDING -->
+<div id="mobileLanding" class="page">
+<h1>Mobile Plans Comparison</h1>
+<p>Compare mobile plans across Switzerland. Use quick entries or go straight to results.</p>
 
-  <!-- Default Compare now opens results with Subscriptions selected -->
-  <div class="button" onclick="openResultsWithPreset('subscriptions')">Compare now</div>
+<div class="button" onclick="openMobileResultsWithPreset('default')">Compare now</div>
 
-  <div class="tiles">
-    <div class="tile" onclick="openResultsWithPreset('unlimited')">Unlimited</div>
-    <div class="tile" onclick="openResultsWithPreset('prepaidOnly')">Prepaid</div>
-    <div class="tile" onclick="openResultsWithPreset('5g')">5G</div>
-    <div class="tile" onclick="openResultsWithPreset('superDeals')">Super deals</div>
-    <div class="tile" onclick="openResultsWithPreset('youth')">Youth plans</div>
-    <div class="tile" onclick="openResultsWithPreset('esim')">eSIM</div>
-  </div>
+<div class="tiles">
+<div class="tile" onclick="openMobileResultsWithPreset('flatrate')">Flatrate</div>
+<div class="tile" onclick="openMobileResultsWithPreset('5g')">5G Abos</div>
+<div class="tile" onclick="openMobileResultsWithPreset('esim')">eSIM</div>
+<div class="tile" onclick="openMobileResultsWithPreset('prepaidOnly')">Prepaid</div>
+<div class="tile" onclick="openMobileResultsWithPreset('unlimited')">Unlimited</div>
+<div class="tile" onclick="openMobileResultsWithPreset('superDeals')">Super Deals</div>
+<div class="tile" onclick="openMobileResultsWithPreset('noContract')">No Contract</div>
+</div>
 </div>
 
-<div id="results" class="page">
-  <h1>Results</h1>
+<!-- HOME LANDING -->
+<div id="homeLanding" class="page">
+<h1>Household Internet, TV &amp; Landline Comparison</h1>
+<p>Compare household subscriptions across Switzerland — internet technologies and speeds, TV bundles, and landline offers.</p>
 
-  <div class="muted">Applied filters:</div>
-  <div id="appliedPills" class="pill-row"></div>
+<div class="button" onclick="openHomeResultsDefault()">Compare now</div>
 
-  <div class="results-layout">
-    <div class="filters">
-      <h3>Filters</h3>
-
-      <!-- NEW: Subscription vs Prepaid selector (top of filters) -->
-      <div class="filter-section">
-        <div class="filter-title">Plan type</div>
-        <label><input type="radio" name="planType" id="pt_subscriptions" onchange="onPlanTypeChange()"> Subscriptions</label><br><br>
-        <label><input type="radio" name="planType" id="pt_prepaid" onchange="onPlanTypeChange()"> Prepaid</label>
-        <div class="muted" style="margin-top:8px;">
-          Switching plan type updates the results preview.
-        </div>
-      </div>
-
-      <label><input type="checkbox" id="f_unl_data_ch" onchange="onFilterChange()"> Unlimited data CH</label><br><br>
-      <label><input type="checkbox" id="f_unl_calls_ch" onchange="onFilterChange()"> Unlimited calls CH</label><br><br>
-
-      <label><input type="checkbox" id="f_5g" onchange="onFilterChange()"> 5G</label><br><br>
-      <label><input type="checkbox" id="f_esim" onchange="onFilterChange()"> eSIM</label><br><br>
-
-      <label><input type="checkbox" id="f_super_deals" onchange="onFilterChange()"> Super deals</label><br><br>
-      <label><input type="checkbox" id="f_youth" onchange="onFilterChange()"> Youth plans</label><br><br>
-
-      <div class="button" style="margin-top:10px;" onclick="resetFilters()">Reset</div>
-    </div>
-
-    <div class="list">
-      <h3>Plan List</h3>
-      <div id="resultsList"></div>
-    </div>
-
-    <div class="ads">
-      <h3>Sponsored</h3>
-      <div class="ad-slot">Ad Slot 1</div>
-      <div class="ad-slot">Ad Slot 2</div>
-    </div>
-  </div>
+<div class="tiles">
+<div class="tile" onclick="openHomeResultsWithTile('homeInternet')">Home Internet</div>
+<div class="tile" onclick="openHomeResultsWithTile('threeInOne')">3 in 1</div>
+<div class="tile" onclick="openHomeResultsWithTile('specialDeals')">Super Deals</div>
+<div class="tile" onclick="openHomeResultsWithTile('superFast')">Super Fast Internet</div>
+<div class="tile" onclick="openHomeResultsWithTile('ftth')">FTTH Faser</div>
+<div class="tile" onclick="openHomeResultsWithTile('copper')">Telefonleitung (Kupfer)</div>
+<div class="tile" onclick="openHomeResultsWithTile('coax')">Coax</div>
+</div>
 </div>
 
-<!-- Placeholder pages -->
+<!-- MOBILE RESULTS -->
+<div id="mobileResults" class="page">
+<h1>Mobile Results</h1>
+
+<!-- Filter cards (closable) -->
+<div class="card-row" id="mobileCards"></div>
+
+<div class="layout-20-60-20">
+<div class="filters-20">
+<div class="top-actions">
+<div class="bell" title="Save Search" onclick="openSaveSearchModal('mobile')">🔔</div>
+<button class="top-btn" onclick="openSaveSearchModal('mobile')">Save Search</button>
+<button class="top-btn" onclick="resetMobileToDefault()">Reset filters</button>
+</div>
+
+<h3>Filters</h3>
+
+<div class="section">
+<div class="section-title">Plan type</div>
+<label><input type="radio" name="mPlanType" id="m_pt_subscription" onchange="onMobilePlanTypeChange()"> Subscription</label><br><br>
+<label><input type="radio" name="mPlanType" id="m_pt_prepaid" onchange="onMobilePlanTypeChange()"> Prepaid</label>
+
+<div style="margin-top:12px;">
+<label><input type="checkbox" id="m_f_flatrate" onchange="onMobileFilterChange()"> Flatrate</label>
+<div class="muted" style="margin-top:6px;">(Flatrate applies to Subscription)</div>
+</div>
+</div>
+
+<label><input type="checkbox" id="m_f_unl_data_ch" onchange="onMobileFilterChange()"> Unlimited data CH</label><br><br>
+<label><input type="checkbox" id="m_f_unl_calls_ch" onchange="onMobileFilterChange()"> Unlimited calls CH</label><br><br>
+
+<label><input type="checkbox" id="m_f_5g" onchange="onMobileFilterChange()"> 5G</label><br><br>
+<label><input type="checkbox" id="m_f_esim" onchange="onMobileFilterChange()"> eSIM</label><br><br>
+<label><input type="checkbox" id="m_f_super_deals" onchange="onMobileFilterChange()"> Super deals</label><br><br>
+<label><input type="checkbox" id="m_f_youth" onchange="onMobileFilterChange()"> Youth plans</label><br><br>
+<label><input type="checkbox" id="m_f_no_contract" onchange="onMobileFilterChange()"> Ohne Vertragsbindung</label><br><br>
+
+<div class="results-count" id="mobileCount">Results: 0</div>
+</div>
+
+<div class="list-60">
+<h3>Plan List</h3>
+<div id="mobileList"></div>
+</div>
+
+<div class="ads-20">
+<h3>Sponsored</h3>
+<div class="ad-slot">Ad Slot 1</div>
+<div class="ad-slot">Ad Slot 2</div>
+</div>
+</div>
+</div>
+
+<!-- HOME RESULTS -->
+<div id="homeResults" class="page">
+<h1>Home Results</h1>
+
+<!-- Filter cards (closable) -->
+<div class="card-row" id="homeCards"></div>
+
+<div class="layout-25-50-25">
+<div class="filters-25">
+<div class="top-actions">
+<div class="bell" title="Save Search" onclick="openSaveSearchModal('home')">🔔</div>
+<button class="top-btn" onclick="openSaveSearchModal('home')">Save Search</button>
+<button class="top-btn" onclick="resetHomeToDefault()">Reset filters</button>
+</div>
+
+<h3>Filters</h3>
+
+<div class="section">
+<div class="section-title">Products</div>
+<label><input type="checkbox" id="h_p_internet" onchange="onHomeFilterChange()"> Internet</label><br><br>
+<label><input type="checkbox" id="h_p_tv" onchange="onHomeFilterChange()"> Television</label><br><br>
+<label><input type="checkbox" id="h_p_landline" onchange="onHomeFilterChange()"> Landline</label>
+</div>
+
+<div class="section">
+<label><input type="checkbox" id="h_special_deals" onchange="onHomeFilterChange()"> Special Deals</label>
+<div class="muted" style="margin-top:6px;">Show discounted offers only</div>
+</div>
+
+<div class="section">
+<div class="section-title">Providers</div>
+<div class="ms-wrap">
+<button class="ms-btn" onclick="toggleProvidersPanel(event)">Select providers…</button>
+<div id="providersPanel" class="ms-panel" onclick="event.stopPropagation()">
+<div class="ms-actions">
+<button onclick="providersSelectAll()">Select all</button>
+<button onclick="providersDeselectAll()">Deselect all</button>
+</div>
+<label class="ms-item"><input type="checkbox" class="h_provider" value="Swisscom" onchange="onHomeFilterChange()"> Swisscom</label>
+<label class="ms-item"><input type="checkbox" class="h_provider" value="Sunrise" onchange="onHomeFilterChange()"> Sunrise</label>
+<label class="ms-item"><input type="checkbox" class="h_provider" value="Salt" onchange="onHomeFilterChange()"> Salt</label>
+<label class="ms-item"><input type="checkbox" class="h_provider" value="Quickline" onchange="onHomeFilterChange()"> Quickline</label>
+<label class="ms-item"><input type="checkbox" class="h_provider" value="Wingo" onchange="onHomeFilterChange()"> Wingo</label>
+<div class="muted" style="margin-top:8px;">Click outside to close.</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Rating</div>
+<div class="muted">Click stars (minimum rating)</div>
+<div class="stars" id="ratingStars"></div>
+</div>
+
+<!-- Collapsible Internet -->
+<div class="section">
+<div class="section-title">
+Internet filters
+<button class="section-toggle" onclick="toggleSection('internetFilters', event)">Toggle</button>
+</div>
+<div id="internetFilters" style="display:none;">
+<div class="muted">Technology</div>
+<label class="ms-item"><input type="checkbox" id="h_tech_ftth" onchange="onHomeFilterChange()"> FTTH Fiber</label>
+<label class="ms-item"><input type="checkbox" id="h_tech_copper" onchange="onHomeFilterChange()"> Landline (Copper)</label>
+<label class="ms-item"><input type="checkbox" id="h_tech_coax" onchange="onHomeFilterChange()"> Coax</label>
+
+<div style="margin-top:12px;">
+<div class="muted">Speed</div>
+<div class="speed-grid" id="speedGrid"></div>
+</div>
+</div>
+</div>
+
+<!-- Collapsible Television (multi-select options) -->
+<div class="section">
+<div class="section-title">
+Television options
+<button class="section-toggle" onclick="toggleSection('tvFilters', event)">Toggle</button>
+</div>
+<div id="tvFilters" style="display:none;">
+<label class="ms-item"><input type="checkbox" id="h_tv_timeshifting" onchange="onHomeFilterChange()"> TV Time Shifting</label>
+<label class="ms-item"><input type="checkbox" id="h_tv_manychannels" onchange="onHomeFilterChange()"> Many TV Channels</label>
+</div>
+</div>
+
+<!-- Collapsible Landline (multi-select options) -->
+<div class="section">
+<div class="section-title">
+Landline options
+<button class="section-toggle" onclick="toggleSection('llFilters', event)">Toggle</button>
+</div>
+<div id="llFilters" style="display:none;">
+<label class="ms-item"><input type="checkbox" id="h_ll_unl_ch" onchange="onHomeFilterChange()"> Unlimited in CH</label>
+<label class="ms-item"><input type="checkbox" id="h_ll_unl_eu" onchange="onHomeFilterChange()"> Unlimited in Europe</label>
+</div>
+</div>
+
+<div class="results-count" id="homeCount">Results: 0</div>
+</div>
+
+<div class="list-50">
+<h3>Offers</h3>
+<div id="homeList"></div>
+</div>
+
+<div class="ads-25">
+<h3>Sponsored</h3>
+<div class="ad-slot">Ad Slot 1</div>
+<div class="ad-slot">Ad Slot 2</div>
+</div>
+</div>
+</div>
+
 <div id="calculator" class="page"><h1>Calculator</h1><p>Placeholder page.</p></div>
-<div id="homeInternet" class="page"><h1>Home Internet</h1><p>Placeholder page.</p></div>
-<div id="television" class="page"><h1>Television</h1><p>Placeholder page.</p></div>
-<div id="landline" class="page"><h1>Landline</h1><p>Placeholder page.</p></div>
 <div id="articles" class="page"><h1>Articles</h1><p>Placeholder page.</p></div>
 
+<!-- SAVE SEARCH MODAL -->
+<div id="modalBackdrop" class="modal-backdrop" onclick="closeSaveSearchModal()">
+<div class="modal" onclick="event.stopPropagation()">
+<h3>Save Search</h3>
+<div class="muted" id="modalContext">You will be notified when results change.</div>
+
+<label>Search name</label>
+<input id="ss_name" placeholder="e.g., My 5G deals" />
+
+<label>Email</label>
+<input id="ss_email" placeholder="name@example.com" />
+
+<div class="modal-actions">
+<button onclick="closeSaveSearchModal()">Cancel</button>
+<button onclick="submitSaveSearch()">Save</button>
+</div>
+</div>
+</div>
+
 <script>
-  // --- Navigation ---
-  function showPage(pageId) {
-    const pages = document.querySelectorAll('.page');
-    pages.forEach(p => p.classList.remove('active'));
-    const el = document.getElementById(pageId);
-    if (el) el.classList.add('active');
-    window.scrollTo(0, 0);
-  }
-  function goTo(pageId, event) {
-    if (event) event.stopPropagation();
-    showPage(pageId);
-  }
+// ----------------- NAV -----------------
+function showPage(pageId) {
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+const el = document.getElementById(pageId);
+if (el) el.classList.add('active');
+window.scrollTo(0, 0);
+closeProvidersPanel();
+}
+function goTo(pageId, event) { if (event) event.stopPropagation(); showPage(pageId); }
 
-  // --- State ---
-  const defaultState = {
-    planType: "subscriptions", // "subscriptions" | "prepaid"
-    unl_data_ch: false,
-    unl_calls_ch: false,
-    g5: false,
-    esim: false,
-    super_deals: false,
-    youth: false
-  };
-  let state = { ...defaultState };
+// ----------------- COLLAPSIBLE SECTIONS -----------------
+function toggleSection(id, event) {
+if (event) event.stopPropagation();
+const el = document.getElementById(id);
+if (!el) return;
+el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
+}
 
-  // --- Fake dataset for preview (lo-fi) ---
-  // planType: "subscriptions" or "prepaid"
-  const PLANS = [
-    { name: "Provider A - Unlimited Max", price: 29.90, planType: "subscriptions", tags: ["unl_data_ch","unl_calls_ch","g5","esim","super_deals"] },
-    { name: "Provider B - Prepaid Basic", price: 15.00, planType: "prepaid", tags: ["esim"] },
-    { name: "Provider C - 5G Value", price: 24.90, planType: "subscriptions", tags: ["g5","unl_calls_ch","super_deals"] },
-    { name: "Provider D - Youth 5G", price: 19.90, planType: "subscriptions", tags: ["youth","g5","esim","super_deals"] },
-    { name: "Provider E - Unlimited Calls", price: 18.90, planType: "subscriptions", tags: ["unl_calls_ch"] },
-    { name: "Provider F - Unlimited Data", price: 22.90, planType: "subscriptions", tags: ["unl_data_ch","esim"] },
-    { name: "Provider G - Youth Prepaid", price: 12.90, planType: "prepaid", tags: ["youth"] }
-  ];
+// ----------------- SAVE SEARCH MODAL -----------------
+let saveContext = "mobile";
+function openSaveSearchModal(context) {
+saveContext = context;
+document.getElementById("modalContext").textContent =
+context === "mobile"
+? "Save this mobile search. You will be notified when results change."
+: "Save this household search. You will be notified when results change.";
+document.getElementById("ss_name").value = "";
+document.getElementById("ss_email").value = "";
+document.getElementById("modalBackdrop").style.display = "flex";
+}
+function closeSaveSearchModal() { document.getElementById("modalBackdrop").style.display = "none"; }
+function submitSaveSearch() {
+const name = document.getElementById("ss_name").value.trim();
+const email = document.getElementById("ss_email").value.trim();
+alert(`Saved "${name || "Untitled"}" for ${saveContext.toUpperCase()} with email: ${email || "(none)"}\n\n(Prototype: no backend)`);
+closeSaveSearchModal();
+}
 
-  // --- DOM sync ---
-  function setControlsFromState() {
-    // plan type radios
-    document.getElementById("pt_subscriptions").checked = state.planType === "subscriptions";
-    document.getElementById("pt_prepaid").checked = state.planType === "prepaid";
+// ----------------- MOBILE -----------------
+const mobileDefault = {
+planType: "subscription",
+flatrate: false,
+unl_data_ch: false,
+unl_calls_ch: false,
+g5: false,
+esim: false,
+super_deals: false,
+youth: false,
+no_contract: false
+};
+let mobileState = { ...mobileDefault };
 
-    // checkboxes
-    document.getElementById("f_unl_data_ch").checked = state.unl_data_ch;
-    document.getElementById("f_unl_calls_ch").checked = state.unl_calls_ch;
-    document.getElementById("f_5g").checked = state.g5;
-    document.getElementById("f_esim").checked = state.esim;
-    document.getElementById("f_super_deals").checked = state.super_deals;
-    document.getElementById("f_youth").checked = state.youth;
-  }
+const MOBILE_PLANS = [
+{ name: "Provider A - Unlimited Max", price: 29.90, planType: "subscription", tags: ["unl_data_ch","unl_calls_ch","g5","esim","super_deals","flatrate"], noContract:false },
+{ name: "Provider B - Prepaid Basic", price: 15.00, planType: "prepaid", tags: ["esim"], noContract:true },
+{ name: "Provider C - 5G Value", price: 24.90, planType: "subscription", tags: ["g5","unl_calls_ch","super_deals"], noContract:true },
+{ name: "Provider D - Youth 5G", price: 19.90, planType: "subscription", tags: ["youth","g5","esim","super_deals"], noContract:true },
+{ name: "Provider E - Flatrate Calls", price: 18.90, planType: "subscription", tags: ["unl_calls_ch","flatrate"], noContract:false },
+{ name: "Provider F - Flatrate Data", price: 22.90, planType: "subscription", tags: ["unl_data_ch","esim","flatrate"], noContract:true },
+{ name: "Provider G - Youth Prepaid", price: 12.90, planType: "prepaid", tags: ["youth"], noContract:true }
+];
 
-  function readCheckboxesToState() {
-    state.unl_data_ch = document.getElementById("f_unl_data_ch").checked;
-    state.unl_calls_ch = document.getElementById("f_unl_calls_ch").checked;
-    state.g5 = document.getElementById("f_5g").checked;
-    state.esim = document.getElementById("f_esim").checked;
-    state.super_deals = document.getElementById("f_super_deals").checked;
-    state.youth = document.getElementById("f_youth").checked;
-  }
+const MOBILE_FILTERS_META = [
+{ key:"planType_subscription", label:"Subscription" },
+{ key:"planType_prepaid", label:"Prepaid" },
+{ key:"flatrate", label:"Flatrate" },
+{ key:"unl_data_ch", label:"Unlimited data CH" },
+{ key:"unl_calls_ch", label:"Unlimited calls CH" },
+{ key:"g5", label:"5G" },
+{ key:"esim", label:"eSIM" },
+{ key:"super_deals", label:"Super deals" },
+{ key:"youth", label:"Youth plans" },
+{ key:"no_contract", label:"Ohne Vertragsbindung" }
+];
 
-  // --- Rendering ---
-  function appliedFilterLabels() {
-    const labels = [];
-    labels.push(state.planType === "subscriptions" ? "Subscriptions" : "Prepaid");
+function mobileSetControls() {
+document.getElementById("m_pt_subscription").checked = mobileState.planType === "subscription";
+document.getElementById("m_pt_prepaid").checked = mobileState.planType === "prepaid";
 
-    if (state.unl_data_ch) labels.push("Unlimited data CH");
-    if (state.unl_calls_ch) labels.push("Unlimited calls CH");
-    if (state.g5) labels.push("5G");
-    if (state.esim) labels.push("eSIM");
-    if (state.super_deals) labels.push("Super deals");
-    if (state.youth) labels.push("Youth plans");
-    return labels;
-  }
+const fl = document.getElementById("m_f_flatrate");
+fl.checked = mobileState.flatrate;
+fl.disabled = mobileState.planType !== "subscription";
 
-  function renderAppliedPills() {
-    const holder = document.getElementById("appliedPills");
-    holder.innerHTML = "";
-    appliedFilterLabels().forEach(l => {
-      const span = document.createElement("span");
-      span.className = "pill";
-      span.textContent = l;
-      holder.appendChild(span);
-    });
-  }
+document.getElementById("m_f_unl_data_ch").checked = mobileState.unl_data_ch;
+document.getElementById("m_f_unl_calls_ch").checked = mobileState.unl_calls_ch;
+document.getElementById("m_f_5g").checked = mobileState.g5;
+document.getElementById("m_f_esim").checked = mobileState.esim;
+document.getElementById("m_f_super_deals").checked = mobileState.super_deals;
+document.getElementById("m_f_youth").checked = mobileState.youth;
+document.getElementById("m_f_no_contract").checked = mobileState.no_contract;
+}
 
-  function matches(plan) {
-    // Plan type is always applied (radio selector)
-    if (plan.planType !== state.planType) return false;
+function mobileReadControls() {
+mobileState.planType = document.getElementById("m_pt_prepaid").checked ? "prepaid" : "subscription";
+mobileState.flatrate = document.getElementById("m_f_flatrate").checked;
+mobileState.unl_data_ch = document.getElementById("m_f_unl_data_ch").checked;
+mobileState.unl_calls_ch = document.getElementById("m_f_unl_calls_ch").checked;
+mobileState.g5 = document.getElementById("m_f_5g").checked;
+mobileState.esim = document.getElementById("m_f_esim").checked;
+mobileState.super_deals = document.getElementById("m_f_super_deals").checked;
+mobileState.youth = document.getElementById("m_f_youth").checked;
+mobileState.no_contract = document.getElementById("m_f_no_contract").checked;
+if (mobileState.planType !== "subscription") mobileState.flatrate = false;
+}
 
-    // AND logic for selected checkboxes
-    if (state.unl_data_ch && !plan.tags.includes("unl_data_ch")) return false;
-    if (state.unl_calls_ch && !plan.tags.includes("unl_calls_ch")) return false;
-    if (state.g5 && !plan.tags.includes("g5")) return false;
-    if (state.esim && !plan.tags.includes("esim")) return false;
-    if (state.super_deals && !plan.tags.includes("super_deals")) return false;
-    if (state.youth && !plan.tags.includes("youth")) return false;
+function mobileActiveKeys() {
+const keys = [];
+keys.push(mobileState.planType === "subscription" ? "planType_subscription" : "planType_prepaid");
+if (mobileState.flatrate) keys.push("flatrate");
+if (mobileState.unl_data_ch) keys.push("unl_data_ch");
+if (mobileState.unl_calls_ch) keys.push("unl_calls_ch");
+if (mobileState.g5) keys.push("g5");
+if (mobileState.esim) keys.push("esim");
+if (mobileState.super_deals) keys.push("super_deals");
+if (mobileState.youth) keys.push("youth");
+if (mobileState.no_contract) keys.push("no_contract");
+return keys;
+}
 
-    return true;
-  }
+function mobileRenderCards() {
+const holder = document.getElementById("mobileCards");
+holder.innerHTML = "";
+const keys = mobileActiveKeys();
 
-  function renderResults() {
-    renderAppliedPills();
+keys.forEach(k => {
+const meta = MOBILE_FILTERS_META.find(m => m.key === k);
+const label = meta ? meta.label : k;
 
-    const list = document.getElementById("resultsList");
-    list.innerHTML = "";
+const card = document.createElement("div");
+card.className = "fcard";
+card.innerHTML = `<span>${label}</span>`;
 
-    const filtered = PLANS.filter(matches);
+// do not allow removing the "default" planType? We allow toggle by removing -> revert to default subscription
+const btn = document.createElement("button");
+btn.textContent = "×";
+btn.title = "Remove filter";
+btn.onclick = () => removeMobileFilterByKey(k);
 
-    if (filtered.length === 0) {
-      list.innerHTML = `<div class="result-item"><strong>No results</strong><p>Try removing some filters or switch plan type.</p></div>`;
-      return;
-    }
+card.appendChild(btn);
+holder.appendChild(card);
+});
+}
 
-    filtered.forEach(p => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = `
-        <strong>${p.name}</strong>
-        <p class="muted">Type: ${p.planType} • Tags: ${p.tags.join(", ")}</p>
-        <p><strong>CHF ${p.price.toFixed(2)} / month</strong></p>
-      `;
-      list.appendChild(div);
-    });
-  }
+function removeMobileFilterByKey(key) {
+if (key === "planType_subscription" || key === "planType_prepaid") {
+// removing plan type reverts to default subscription
+mobileState.planType = "subscription";
+mobileState.flatrate = false;
+} else if (key === "flatrate") mobileState.flatrate = false;
+else if (key === "unl_data_ch") mobileState.unl_data_ch = false;
+else if (key === "unl_calls_ch") mobileState.unl_calls_ch = false;
+else if (key === "g5") mobileState.g5 = false;
+else if (key === "esim") mobileState.esim = false;
+else if (key === "super_deals") mobileState.super_deals = false;
+else if (key === "youth") mobileState.youth = false;
+else if (key === "no_contract") mobileState.no_contract = false;
 
-  // --- Events ---
-  function onFilterChange() {
-    readCheckboxesToState();
-    renderResults();
-  }
+mobileSetControls();
+mobileRenderAll();
+}
 
-  function onPlanTypeChange() {
-    // Plan type toggles should affect preview as well
-    state.planType = document.getElementById("pt_prepaid").checked ? "prepaid" : "subscriptions";
-    renderResults();
-  }
+function mobileMatches(p) {
+if (p.planType !== mobileState.planType) return false;
+if (mobileState.no_contract && !p.noContract) return false;
+if (mobileState.flatrate && !p.tags.includes("flatrate")) return false;
+if (mobileState.unl_data_ch && !p.tags.includes("unl_data_ch")) return false;
+if (mobileState.unl_calls_ch && !p.tags.includes("unl_calls_ch")) return false;
+if (mobileState.g5 && !p.tags.includes("g5")) return false;
+if (mobileState.esim && !p.tags.includes("esim")) return false;
+if (mobileState.super_deals && !p.tags.includes("super_deals")) return false;
+if (mobileState.youth && !p.tags.includes("youth")) return false;
+return true;
+}
 
-  function resetFilters() {
-    // Keep current plan type, reset the rest (common UX)
-    const keepType = state.planType;
-    state = { ...defaultState, planType: keepType };
-    setControlsFromState();
-    renderResults();
-  }
+function mobileRenderListAndCount() {
+const list = document.getElementById("mobileList");
+list.innerHTML = "";
+const filtered = MOBILE_PLANS.filter(mobileMatches);
 
-  // --- Entry points / presets ---
-  function openResultsWithPreset(preset) {
-    // Always start from clean state, then apply preset
-    state = { ...defaultState };
+document.getElementById("mobileCount").textContent = `Results: ${filtered.length}`;
 
-    // Default for Compare now: Subscriptions
-    if (preset === "subscriptions") {
-      state.planType = "subscriptions";
-    } else if (preset === "prepaidOnly") {
-      state.planType = "prepaid";
-    } else if (preset === "unlimited") {
-      state.planType = "subscriptions";
-      state.unl_calls_ch = true;
-      state.unl_data_ch = true;
-    } else if (preset === "5g") {
-      state.planType = "subscriptions";
-      state.g5 = true;
-    } else if (preset === "esim") {
-      state.planType = "subscriptions";
-      state.esim = true;
-    } else if (preset === "superDeals") {
-      state.planType = "subscriptions";
-      state.super_deals = true;
-    } else if (preset === "youth") {
-      state.planType = "subscriptions";
-      state.youth = true;
-    }
+if (filtered.length === 0) {
+list.innerHTML = `<div class="result-item"><strong>No results</strong><p>Try removing some filters or switch plan type.</p></div>`;
+return;
+}
+filtered.forEach(p => {
+const div = document.createElement("div");
+div.className = "result-item";
+div.innerHTML = `
+<strong>${p.name}</strong>
+<p class="muted">Type: ${p.planType} • No contract: ${p.noContract ? "yes" : "no"} • Tags: ${p.tags.join(", ")}</p>
+<p><strong>CHF ${p.price.toFixed(2)} / month</strong></p>
+`;
+list.appendChild(div);
+});
+}
 
-    showPage("results");
-    setControlsFromState();
-    renderResults();
-  }
+function mobileRenderAll() {
+mobileRenderCards();
+mobileRenderListAndCount();
+}
 
-  // Boot
-  document.addEventListener("DOMContentLoaded", () => {
-    setControlsFromState();
-    renderResults();
-  });
+function onMobilePlanTypeChange() { mobileReadControls(); mobileSetControls(); mobileRenderAll(); }
+function onMobileFilterChange() { mobileReadControls(); mobileSetControls(); mobileRenderAll(); }
+
+function resetMobileToDefault() {
+mobileState = { ...mobileDefault }; // default: Subscription
+mobileSetControls();
+mobileRenderAll();
+}
+
+function openMobileResultsWithPreset(preset) {
+mobileState = { ...mobileDefault };
+if (preset === "default") {
+mobileState.planType = "subscription";
+} else if (preset === "flatrate") {
+mobileState.planType = "subscription";
+mobileState.flatrate = true;
+} else if (preset === "5g") {
+mobileState.planType = "subscription";
+mobileState.g5 = true;
+} else if (preset === "esim") {
+mobileState.planType = "subscription";
+mobileState.esim = true;
+} else if (preset === "prepaidOnly") {
+mobileState.planType = "prepaid";
+} else if (preset === "unlimited") {
+mobileState.planType = "subscription";
+mobileState.unl_calls_ch = true;
+mobileState.unl_data_ch = true;
+} else if (preset === "superDeals") {
+mobileState.planType = "subscription";
+mobileState.super_deals = true;
+} else if (preset === "noContract") {
+mobileState.planType = "subscription";
+mobileState.no_contract = true;
+}
+showPage("mobileResults");
+mobileSetControls();
+mobileRenderAll();
+}
+
+// ----------------- HOME -----------------
+const homeDefault = {
+products: { internet: true, tv: false, landline: false }, // default: Internet
+specialDealsOnly: false,
+ratingMin: 0,
+tech: { ftth: false, copper: false, coax: false },
+speeds: [],
+tv: { timeshifting: false, manychannels: false }, // multi-select
+ll: { unl_ch: false, unl_eu: false } // multi-select
+};
+let homeState = JSON.parse(JSON.stringify(homeDefault));
+
+const SPEEDS = [
+{ id: "up50", label: "up to 50 Mbit/s" },
+{ id: "up100", label: "up to 100 Mbit/s" },
+{ id: "up300", label: "up to 300 Mbit/s" },
+{ id: "up500", label: "up to 500 Mbit/s" },
+{ id: "up1g", label: "up to 1 Gbit/s" },
+{ id: "gt1g", label: "more than 1 Gbit/s" }
+];
+
+const HOME_OFFERS = [
+{ title:"Swisscom Internet S", provider:"Swisscom", type:"Internet", rating:4, price:59.90, discounted:false, discountPrice:null,
+products:{internet:true,tv:false,landline:false}, tech:["ftth"], speed:"up1g", tvFeat:[], llFeat:[] },
+{ title:"Sunrise 3in1 Bundle", provider:"Sunrise", type:"Internet + TV + Landline", rating:5, price:79.90, discounted:true, discountPrice:59.90,
+products:{internet:true,tv:true,landline:true}, tech:["coax"], speed:"up500", tvFeat:["manychannels"], llFeat:["unl_ch"] },
+{ title:"Salt Home Fiber", provider:"Salt", type:"Internet", rating:4, price:49.95, discounted:true, discountPrice:39.95,
+products:{internet:true,tv:false,landline:false}, tech:["ftth"], speed:"up1g", tvFeat:[], llFeat:[] },
+{ title:"Quickline TV+Internet", provider:"Quickline", type:"Internet + TV", rating:3, price:69.00, discounted:false, discountPrice:null,
+products:{internet:true,tv:true,landline:false}, tech:["coax"], speed:"up300", tvFeat:["timeshifting"], llFeat:[] },
+{ title:"Wingo Copper Basic", provider:"Wingo", type:"Internet", rating:2, price:39.00, discounted:false, discountPrice:null,
+products:{internet:true,tv:false,landline:false}, tech:["copper"], speed:"up100", tvFeat:[], llFeat:[] },
+{ title:"Swisscom Landline Europe", provider:"Swisscom", type:"Landline", rating:4, price:29.90, discounted:false, discountPrice:null,
+products:{internet:false,tv:false,landline:true}, tech:[], speed:null, tvFeat:[], llFeat:["unl_eu"] },
+{ title:"Sunrise TV XL", provider:"Sunrise", type:"Television", rating:4, price:39.90, discounted:true, discountPrice:29.90,
+products:{internet:false,tv:true,landline:false}, tech:[], speed:null, tvFeat:["manychannels","timeshifting"], llFeat:[] }
+];
+
+const HOME_FILTERS_META = [
+{ key:"p_internet", label:"Internet" },
+{ key:"p_tv", label:"Television" },
+{ key:"p_landline", label:"Landline" },
+{ key:"special_deals", label:"Special Deals" },
+{ key:"rating", label:"Rating" },
+{ key:"tech_ftth", label:"FTTH Fiber" },
+{ key:"tech_copper", label:"Landline (Copper)" },
+{ key:"tech_coax", label:"Coax" },
+{ key:"tv_timeshifting", label:"TV Time Shifting" },
+{ key:"tv_manychannels", label:"Many TV Channels" },
+{ key:"ll_unl_ch", label:"Unlimited in CH" },
+{ key:"ll_unl_eu", label:"Unlimited in Europe" }
+// speeds + providers handled dynamically
+];
+
+function homeInitUI() {
+const grid = document.getElementById("speedGrid");
+grid.innerHTML = "";
+SPEEDS.forEach(s => {
+const el = document.createElement("div");
+el.className = "speed-pill";
+el.textContent = s.label;
+el.onclick = () => toggleSpeed(s.id);
+el.id = "speed_" + s.id;
+grid.appendChild(el);
+});
+
+const stars = document.getElementById("ratingStars");
+stars.innerHTML = "";
+for (let i=1; i<=5; i++) {
+const st = document.createElement("div");
+st.className = "star";
+st.textContent = "★";
+st.onclick = () => setRatingMin(i);
+st.id = "star_" + i;
+stars.appendChild(st);
+}
+
+document.addEventListener("click", () => closeProvidersPanel());
+}
+
+function homeSetControls() {
+document.getElementById("h_p_internet").checked = homeState.products.internet;
+document.getElementById("h_p_tv").checked = homeState.products.tv;
+document.getElementById("h_p_landline").checked = homeState.products.landline;
+
+document.getElementById("h_special_deals").checked = homeState.specialDealsOnly;
+
+document.getElementById("h_tech_ftth").checked = homeState.tech.ftth;
+document.getElementById("h_tech_copper").checked = homeState.tech.copper;
+document.getElementById("h_tech_coax").checked = homeState.tech.coax;
+
+document.getElementById("h_tv_timeshifting").checked = homeState.tv.timeshifting;
+document.getElementById("h_tv_manychannels").checked = homeState.tv.manychannels;
+
+document.getElementById("h_ll_unl_ch").checked = homeState.ll.unl_ch;
+document.getElementById("h_ll_unl_eu").checked = homeState.ll.unl_eu;
+
+SPEEDS.forEach(s => {
+const el = document.getElementById("speed_" + s.id);
+if (!el) return;
+el.classList.toggle("active", homeState.speeds.includes(s.id));
+});
+
+for (let i=1; i<=5; i++) {
+const el = document.getElementById("star_" + i);
+if (!el) continue;
+el.classList.toggle("active", i <= homeState.ratingMin);
+}
+}
+
+function homeReadControls() {
+homeState.products.internet = document.getElementById("h_p_internet").checked;
+homeState.products.tv = document.getElementById("h_p_tv").checked;
+homeState.products.landline = document.getElementById("h_p_landline").checked;
+
+if (!homeState.products.internet && !homeState.products.tv && !homeState.products.landline) {
+homeState.products.internet = true;
+document.getElementById("h_p_internet").checked = true;
+}
+
+homeState.specialDealsOnly = document.getElementById("h_special_deals").checked;
+
+homeState.tech.ftth = document.getElementById("h_tech_ftth").checked;
+homeState.tech.copper = document.getElementById("h_tech_copper").checked;
+homeState.tech.coax = document.getElementById("h_tech_coax").checked;
+
+homeState.tv.timeshifting = document.getElementById("h_tv_timeshifting").checked;
+homeState.tv.manychannels = document.getElementById("h_tv_manychannels").checked;
+
+homeState.ll.unl_ch = document.getElementById("h_ll_unl_ch").checked;
+homeState.ll.unl_eu = document.getElementById("h_ll_unl_eu").checked;
+}
+
+function getSelectedProviders() {
+const provCbs = Array.from(document.querySelectorAll(".h_provider"));
+const checked = provCbs.filter(cb => cb.checked).map(cb => cb.value);
+if (checked.length === 0) return { mode: "all", list: provCbs.map(cb => cb.value) };
+return { mode: "some", list: checked };
+}
+
+function homeActiveKeys() {
+const keys = [];
+if (homeState.products.internet) keys.push("p_internet");
+if (homeState.products.tv) keys.push("p_tv");
+if (homeState.products.landline) keys.push("p_landline");
+if (homeState.specialDealsOnly) keys.push("special_deals");
+if (homeState.ratingMin > 0) keys.push("rating");
+
+if (homeState.tech.ftth) keys.push("tech_ftth");
+if (homeState.tech.copper) keys.push("tech_copper");
+if (homeState.tech.coax) keys.push("tech_coax");
+
+if (homeState.tv.timeshifting) keys.push("tv_timeshifting");
+if (homeState.tv.manychannels) keys.push("tv_manychannels");
+
+if (homeState.ll.unl_ch) keys.push("ll_unl_ch");
+if (homeState.ll.unl_eu) keys.push("ll_unl_eu");
+
+// speeds
+homeState.speeds.forEach(s => keys.push("speed_" + s));
+
+// providers (only if subset)
+const prov = getSelectedProviders();
+if (prov.mode === "some") prov.list.forEach(p => keys.push("provider_" + p));
+
+return keys;
+}
+
+function homeCardLabelForKey(key) {
+if (key.startsWith("speed_")) {
+const id = key.replace("speed_", "");
+return SPEEDS.find(s => s.id === id)?.label || key;
+}
+if (key.startsWith("provider_")) {
+return "Provider: " + key.replace("provider_", "");
+}
+if (key === "rating") return "Rating: " + homeState.ratingMin + "+";
+
+const meta = HOME_FILTERS_META.find(m => m.key === key);
+return meta ? meta.label : key;
+}
+
+function homeRenderCards() {
+const holder = document.getElementById("homeCards");
+holder.innerHTML = "";
+const keys = homeActiveKeys();
+
+keys.forEach(k => {
+const card = document.createElement("div");
+card.className = "fcard";
+card.innerHTML = `<span>${homeCardLabelForKey(k)}</span>`;
+
+const btn = document.createElement("button");
+btn.textContent = "×";
+btn.title = "Remove filter";
+btn.onclick = () => removeHomeFilterByKey(k);
+
+card.appendChild(btn);
+holder.appendChild(card);
+});
+}
+
+function removeHomeFilterByKey(key) {
+if (key === "p_internet") homeState.products.internet = false;
+else if (key === "p_tv") homeState.products.tv = false;
+else if (key === "p_landline") homeState.products.landline = false;
+else if (key === "special_deals") homeState.specialDealsOnly = false;
+else if (key === "rating") homeState.ratingMin = 0;
+else if (key === "tech_ftth") homeState.tech.ftth = false;
+else if (key === "tech_copper") homeState.tech.copper = false;
+else if (key === "tech_coax") homeState.tech.coax = false;
+else if (key === "tv_timeshifting") homeState.tv.timeshifting = false;
+else if (key === "tv_manychannels") homeState.tv.manychannels = false;
+else if (key === "ll_unl_ch") homeState.ll.unl_ch = false;
+else if (key === "ll_unl_eu") homeState.ll.unl_eu = false;
+else if (key.startsWith("speed_")) {
+const id = key.replace("speed_", "");
+homeState.speeds = homeState.speeds.filter(x => x !== id);
+} else if (key.startsWith("provider_")) {
+const p = key.replace("provider_", "");
+// uncheck provider
+const cb = Array.from(document.querySelectorAll(".h_provider")).find(x => x.value === p);
+if (cb) cb.checked = false;
+}
+
+// guardrail: if all products off, revert to default Internet
+if (!homeState.products.internet && !homeState.products.tv && !homeState.products.landline) {
+homeState.products.internet = true;
+}
+
+homeSetControls();
+homeRenderAll();
+}
+
+function homeMatches(o) {
+if (homeState.products.internet && !o.products.internet) return false;
+if (homeState.products.tv && !o.products.tv) return false;
+if (homeState.products.landline && !o.products.landline) return false;
+
+if (homeState.specialDealsOnly && !o.discounted) return false;
+
+const prov = getSelectedProviders();
+if (prov.mode === "some" && !prov.list.includes(o.provider)) return false;
+
+if (homeState.ratingMin > 0 && o.rating < homeState.ratingMin) return false;
+
+if (homeState.products.internet) {
+const anyTech = homeState.tech.ftth || homeState.tech.copper || homeState.tech.coax;
+if (anyTech) {
+const ok =
+(homeState.tech.ftth && o.tech.includes("ftth")) ||
+(homeState.tech.copper && o.tech.includes("copper")) ||
+(homeState.tech.coax && o.tech.includes("coax"));
+if (!ok) return false;
+}
+if (homeState.speeds.length) {
+if (!o.speed || !homeState.speeds.includes(o.speed)) return false;
+}
+}
+
+if (homeState.products.tv) {
+const anyTv = homeState.tv.timeshifting || homeState.tv.manychannels;
+if (anyTv) {
+const ok =
+(homeState.tv.timeshifting && o.tvFeat.includes("timeshifting")) ||
+(homeState.tv.manychannels && o.tvFeat.includes("manychannels"));
+if (!ok) return false;
+}
+}
+
+if (homeState.products.landline) {
+const anyLl = homeState.ll.unl_ch || homeState.ll.unl_eu;
+if (anyLl) {
+const ok =
+(homeState.ll.unl_ch && o.llFeat.includes("unl_ch")) ||
+(homeState.ll.unl_eu && o.llFeat.includes("unl_eu"));
+if (!ok) return false;
+}
+}
+
+return true;
+}
+
+function homeRenderListAndCount() {
+const list = document.getElementById("homeList");
+list.innerHTML = "";
+const filtered = HOME_OFFERS.filter(homeMatches);
+
+document.getElementById("homeCount").textContent = `Results: ${filtered.length}`;
+
+if (filtered.length === 0) {
+list.innerHTML = `<div class="result-item"><strong>No results</strong><p>Try removing some filters.</p></div>`;
+return;
+}
+
+filtered.forEach(o => {
+const div = document.createElement("div");
+div.className = "result-item";
+const stars = "★".repeat(o.rating) + "☆".repeat(5 - o.rating);
+const priceHtml = o.discounted
+? `<div class="price-row"><span class="price-old">CHF ${o.price.toFixed(2)}</span> <span class="price-new">CHF ${o.discountPrice.toFixed(2)} / month</span></div>`
+: `<div class="price-row"><span class="price-new">CHF ${o.price.toFixed(2)} / month</span></div>`;
+
+div.innerHTML = `
+<div class="card-title">${o.title}</div>
+<div class="card-meta">${o.type} • Provider: ${o.provider} • Rating: ${stars}</div>
+${priceHtml}
+`;
+list.appendChild(div);
+});
+}
+
+function homeRenderAll() {
+homeRenderCards();
+homeRenderListAndCount();
+}
+
+function onHomeFilterChange() {
+homeReadControls();
+homeSetControls();
+homeRenderAll();
+}
+
+// Providers dropdown
+function toggleProvidersPanel(event) {
+if (event) event.stopPropagation();
+const panel = document.getElementById("providersPanel");
+panel.classList.toggle("show");
+}
+function closeProvidersPanel() {
+const panel = document.getElementById("providersPanel");
+if (panel) panel.classList.remove("show");
+}
+function providersSelectAll() {
+Array.from(document.querySelectorAll(".h_provider")).forEach(cb => cb.checked = true);
+onHomeFilterChange();
+}
+function providersDeselectAll() {
+Array.from(document.querySelectorAll(".h_provider")).forEach(cb => cb.checked = false);
+onHomeFilterChange();
+}
+
+// Speeds
+function toggleSpeed(id) {
+const idx = homeState.speeds.indexOf(id);
+if (idx >= 0) homeState.speeds.splice(idx, 1);
+else homeState.speeds.push(id);
+homeSetControls();
+homeRenderAll();
+}
+
+// Rating
+function setRatingMin(n) {
+homeState.ratingMin = (homeState.ratingMin === n) ? 0 : n;
+homeSetControls();
+homeRenderAll();
+}
+
+function resetHomeToDefault() {
+homeState = JSON.parse(JSON.stringify(homeDefault)); // default: Internet selected
+Array.from(document.querySelectorAll(".h_provider")).forEach(cb => cb.checked = false);
+homeSetControls();
+homeRenderAll();
+}
+
+function openHomeResultsDefault() {
+resetHomeToDefault();
+showPage("homeResults");
+}
+
+function openHomeResultsWithTile(tile) {
+homeState = JSON.parse(JSON.stringify(homeDefault));
+if (tile === "homeInternet") homeState.products = { internet: true, tv: false, landline: false };
+else if (tile === "threeInOne") homeState.products = { internet: true, tv: true, landline: true };
+else if (tile === "specialDeals") homeState.specialDealsOnly = true;
+else if (tile === "superFast") { homeState.products = { internet:true, tv:false, landline:false }; homeState.speeds = ["up1g","gt1g"]; }
+else if (tile === "ftth") { homeState.products = { internet:true, tv:false, landline:false }; homeState.tech.ftth = true; }
+else if (tile === "copper") { homeState.products = { internet:true, tv:false, landline:false }; homeState.tech.copper = true; }
+else if (tile === "coax") { homeState.products = { internet:true, tv:false, landline:false }; homeState.tech.coax = true; }
+
+Array.from(document.querySelectorAll(".h_provider")).forEach(cb => cb.checked = false);
+showPage("homeResults");
+homeSetControls();
+homeRenderAll();
+}
+
+// ----------------- BOOT -----------------
+document.addEventListener("DOMContentLoaded", () => {
+homeInitUI();
+
+// initial states rendered (even if pages not visible yet)
+mobileSetControls();
+mobileRenderAll();
+
+homeSetControls();
+homeRenderAll();
+});
+
+// Mobile control wiring
+function onMobilePlanTypeChange() { mobileReadControls(); mobileSetControls(); mobileRenderAll(); }
+function onMobileFilterChange() { mobileReadControls(); mobileSetControls(); mobileRenderAll(); }
+
+// Mobile filter cards + count initial helpers
+function mobileSetControls() {
+document.getElementById("m_pt_subscription").checked = mobileState.planType === "subscription";
+document.getElementById("m_pt_prepaid").checked = mobileState.planType === "prepaid";
+const fl = document.getElementById("m_f_flatrate");
+fl.checked = mobileState.flatrate;
+fl.disabled = mobileState.planType !== "subscription";
+document.getElementById("m_f_unl_data_ch").checked = mobileState.unl_data_ch;
+document.getElementById("m_f_unl_calls_ch").checked = mobileState.unl_calls_ch;
+document.getElementById("m_f_5g").checked = mobileState.g5;
+document.getElementById("m_f_esim").checked = mobileState.esim;
+document.getElementById("m_f_super_deals").checked = mobileState.super_deals;
+document.getElementById("m_f_youth").checked = mobileState.youth;
+document.getElementById("m_f_no_contract").checked = mobileState.no_contract;
+}
+function mobileReadControls() {
+mobileState.planType = document.getElementById("m_pt_prepaid").checked ? "prepaid" : "subscription";
+mobileState.flatrate = document.getElementById("m_f_flatrate").checked;
+mobileState.unl_data_ch = document.getElementById("m_f_unl_data_ch").checked;
+mobileState.unl_calls_ch = document.getElementById("m_f_unl_calls_ch").checked;
+mobileState.g5 = document.getElementById("m_f_5g").checked;
+mobileState.esim = document.getElementById("m_f_esim").checked;
+mobileState.super_deals = document.getElementById("m_f_super_deals").checked;
+mobileState.youth = document.getElementById("m_f_youth").checked;
+mobileState.no_contract = document.getElementById("m_f_no_contract").checked;
+if (mobileState.planType !== "subscription") mobileState.flatrate = false;
+}
 </script>
 
 </body>
